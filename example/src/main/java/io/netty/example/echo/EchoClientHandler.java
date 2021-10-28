@@ -19,6 +19,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.charset.Charset;
 
 /**
  * Handler implementation for the echo client.  It initiates the ping-pong
@@ -27,16 +31,19 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  */
 public class EchoClientHandler extends ChannelInboundHandlerAdapter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EchoClientHandler.class);
+
     private final ByteBuf firstMessage;
 
     /**
      * Creates a client-side handler.
      */
     public EchoClientHandler() {
-        firstMessage = Unpooled.buffer(EchoClient.SIZE);
+        /*firstMessage = Unpooled.buffer(EchoClient.SIZE);
         for (int i = 0; i < firstMessage.capacity(); i ++) {
             firstMessage.writeByte((byte) i);
-        }
+        }*/
+        firstMessage = Unpooled.wrappedBuffer("I am echo message".getBytes(Charset.forName("UTF-8")));
     }
 
     @Override
