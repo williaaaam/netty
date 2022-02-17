@@ -62,6 +62,7 @@ public abstract class ChannelHandlerAdapter implements ChannelHandler {
     }
 
     /**
+     * 当业务处理器被加入到流水线后，此方法将被回调。也就是在完成ch.pipeline().addLast(handler)语句之后会回调handlerAdded()。
      * Do nothing by default, sub-classes may override this method.
      */
     @Override
@@ -70,6 +71,7 @@ public abstract class ChannelHandlerAdapter implements ChannelHandler {
     }
 
     /**
+     * ：Netty会移除掉通道上所有的业务处理器，并且回调所有业务处理器的handlerRemoved()方法。
      * Do nothing by default, sub-classes may override this method.
      */
     @Override

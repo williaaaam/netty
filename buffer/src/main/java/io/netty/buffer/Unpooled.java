@@ -94,6 +94,7 @@ public final class Unpooled {
     }
 
     /**
+     * 默认初始化容量256(字节数组长度)，最大Integer.MAX_VALUE的堆内字节数组
      * Creates a new big-endian Java heap buffer with reasonably small initial capacity, which
      * expands its capacity boundlessly on demand.
      */
@@ -381,6 +382,7 @@ public final class Unpooled {
     }
 
     /**
+     * 深拷贝
      * Creates a new buffer whose content is a copy of the specified
      * {@code buffer}'s current slice.  The new buffer's {@code readerIndex}
      * and {@code writerIndex} are {@code 0} and {@code buffer.remaining}

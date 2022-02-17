@@ -37,6 +37,8 @@ import java.util.concurrent.ThreadFactory;
 public class NioEventLoopGroup extends MultithreadEventLoopGroup {
 
     /**
+     * 如果使用EventLoopGroup的无参数构造函数，没有传入线程数量或者传入的数量为0，那么EventLoopGroup内部的线程数量到底是多少呢？默认的EventLoopGroup内部线程数量为最大可用的CPU处理器数量的2倍。
+     * 假设电脑使用的是4核的CPU，那么在内部会启动8个EventLoop线程，相当于8个子反应器实例。
      * Create a new instance using the default number of threads, the default {@link ThreadFactory} and
      * the {@link SelectorProvider} which is returned by {@link SelectorProvider#provider()}.
      */

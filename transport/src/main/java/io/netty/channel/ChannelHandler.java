@@ -189,6 +189,7 @@ public interface ChannelHandler {
     void handlerRemoved(ChannelHandlerContext ctx) throws Exception;
 
     /**
+     * 当通道处理过程发生异常时，Netty会调用fireException-Caught()方法，触发异常捕获事件，而在通道流水线注册过的入站处理器的exceptionCaught()方法会被调用。注意，这个方法是在ChannelHandler中定义的方法，入站处理器、出站处理器接口都继承了该方法。
      * Gets called if a {@link Throwable} was thrown.
      *
      * @deprecated if you want to handle this event you should implement {@link ChannelInboundHandler} and

@@ -24,6 +24,7 @@ import java.net.SocketAddress;
 public interface ChannelOutboundInvoker {
 
     /**
+     * 此方法的作用为绑定监听地址，开始监听新的客户端连接。此方法在服务器的新连接监听和接收通道时调用。
      * Request to bind to the given {@link SocketAddress} and notify the {@link ChannelFuture} once the operation
      * completes, either because the operation was successful or because of an error.
      * <p>
@@ -35,6 +36,7 @@ public interface ChannelOutboundInvoker {
     ChannelFuture bind(SocketAddress localAddress);
 
     /**
+     * 此方法的作用为连接远程服务器。方法的参数为远程服务器的地址，调用后会立即返回，其返回值为执行连接操作的异步任务ChannelFuture。此方法在客户端的传输通道使用。
      * Request to connect to the given {@link SocketAddress} and notify the {@link ChannelFuture} once the operation
      * completes, either because the operation was successful or because of an error.
      * <p>
@@ -73,6 +75,7 @@ public interface ChannelOutboundInvoker {
     ChannelFuture disconnect();
 
     /**
+     * 此方法的作用为关闭通道连接，返回连接关闭的ChannelFu-ture异步任务。如果需要在连接正式关闭后执行其他操作，则需要为异步任务设置回调方法；或者调用ChannelFuture异步任务的sync()方法来阻塞当前线程，一直等到通道关闭的异步任务执行完毕。
      * Request to close the {@link Channel} and notify the {@link ChannelFuture} once the operation completes,
      * either because the operation was successful or because of
      * an error.
@@ -201,6 +204,7 @@ public interface ChannelOutboundInvoker {
     ChannelOutboundInvoker read();
 
     /**
+     * 此方法的作用为启程出站流水处理，把处理后的最终数据写到底层通道（如Java NIO通道）。此方法的返回值为出站处理的异步处理任务。
      * Request to write a message via this {@link ChannelHandlerContext} through the {@link ChannelPipeline}.
      * This method will not request to actual flush, so be sure to call {@link #flush()}
      * once you want to request to flush all pending data to the actual transport.
@@ -215,6 +219,7 @@ public interface ChannelOutboundInvoker {
     ChannelFuture write(Object msg, ChannelPromise promise);
 
     /**
+     * 此方法的作用为将缓冲区中的数据立即写出到对端。调用前面的write()出站处理时，并不能将数据直接写出到对端，write操作的作用在大部分情况下仅仅是写入操作系统的缓冲区，操作系统会根据缓冲区的情况决定什么时候把数据写到对端。执行flush()方法会立即将缓冲区的数据写到对端。
      * Request to flush all pending messages via this ChannelOutboundInvoker.
      */
     ChannelOutboundInvoker flush();

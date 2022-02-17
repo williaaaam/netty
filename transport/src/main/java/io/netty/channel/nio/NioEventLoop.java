@@ -50,6 +50,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 有两个重要的成员属性：Selector和Thread
+ *
+ * 一个NioEventLoop拥有一个线程，负责NIO选择器的IO事件轮询
  * {@link SingleThreadEventLoop} implementation which register the {@link Channel}'s to a
  * {@link Selector} and so does the multi-plexing of these in the event loop.
  *
@@ -73,7 +76,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     };
 
-    // Workaround for JDK NIO bug.
+    // Workaround for JDK NIO bug. JDK NIO bug解决方案
     //
     // See:
     // - https://bugs.java.com/view_bug.do?bug_id=6427854
@@ -86,6 +89,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 AccessController.doPrivileged(new PrivilegedAction<Void>() {
                     @Override
                     public Void run() {
+                        // 解决多线程下，Windows下Selector.open（） NPE的问题
                         System.setProperty(key, "");
                         return null;
                     }

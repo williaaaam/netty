@@ -61,6 +61,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(
                     DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
+    // Pipeline中的节点类型是ChannelHandler的包装类型ChannelHandlerContext:封装ChannelHandler和ChannelPipeline的关联关系
     final AbstractChannelHandlerContext head;
     final AbstractChannelHandlerContext tail;
 
@@ -200,9 +201,9 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
             checkMultiplicity(handler);
-
+            // 新建包装Handler的DefaultChannelHandlerContext对象
             newCtx = newContext(group, filterName(name, handler), handler);
-
+            // 尾插法插入双向链表中
             addLast0(newCtx);
 
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
@@ -914,6 +915,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    /**
+     * 入站：启动流水线的入站读
+     * @param msg
+     * @return
+     */
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
@@ -1005,8 +1011,14 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return this;
     }
 
+    /**
+     * 出站：启动流水线的出站写
+     * @param msg
+     * @return
+     */
     @Override
     public final ChannelFuture write(Object msg) {
+        // 从后往前传递
         return tail.write(msg);
     }
 
@@ -1241,6 +1253,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    /**
+     * 入站处理器
+     * 流水线尾部的TailContext不仅仅是一个上下文类，还是一个入站处理器类，实现了所有入站处理回调方法，这些回调实现的主要工作基本上都是有关收尾处理的，如释放缓冲区对象、完成异常处理等。
+     */
     // A special catch-all handler that handles both bytes and messages.
     final class TailContext extends AbstractChannelHandlerContext implements ChannelInboundHandler {
 
@@ -1302,9 +1318,13 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    /**
+     * 入站和出站处理器
+     */
     final class HeadContext extends AbstractChannelHandlerContext
             implements ChannelOutboundHandler, ChannelInboundHandler {
-
+        // 传输操作类实例：完成通道最终的输入、输出等操作
+        // 此类专供Netty内部使用，应用程序不能使用，所以取名unsafe
         private final Unsafe unsafe;
 
         HeadContext(DefaultChannelPipeline pipeline) {
@@ -1357,11 +1377,22 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             unsafe.deregister(promise);
         }
 
+        /**
+         * 出站：Handler->Channel读取传输数据，Netty Channel -> Java NIO Channel
+         *
+         * @param ctx
+         */
         @Override
         public void read(ChannelHandlerContext ctx) {
             unsafe.beginRead();
         }
 
+        /**
+         *
+         * @param ctx               the {@link ChannelHandlerContext} for which the write operation is made
+         * @param msg               the message to write
+         * @param promise           the {@link ChannelPromise} to notify once the operation completes
+         */
         @Override
         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
             unsafe.write(msg, promise);
@@ -1405,6 +1436,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             ctx.fireChannelInactive();
         }
 
+        /**
+         * 入站：Channel -> Handler读操作
+         * @param ctx
+         * @param msg
+         */
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             ctx.fireChannelRead(msg);

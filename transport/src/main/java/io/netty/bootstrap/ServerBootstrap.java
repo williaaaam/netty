@@ -67,6 +67,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     /**
+     * 如果不需要分开新连接监听和数据传输的IO事件就用这个API,但新连接可能被数据传输或者业务逻辑阻塞，所以服务端建议设置成两个轮询组的工作模式
      * Specify the {@link EventLoopGroup} which is used for the parent (acceptor) and the child (client).
      */
     @Override

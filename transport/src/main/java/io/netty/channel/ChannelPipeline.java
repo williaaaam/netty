@@ -30,6 +30,20 @@ import java.util.NoSuchElementException;
 
 
 /**
+ * 它像一条管道，将绑定到一个通道的多个Handler处理器实例串联在一起，形成一条流水线。ChannelPipeline的默认实现实际上被设计成一个双向链表。
+ * 所有的Handler处理器实例被包装成双向链表的节点，被加入到ChannelPipeline中。
+ * <p>
+ *
+ * Netty的通道流水线与普通的流水线不同，Netty的流水线不是单向的，而是双向的，而普通的流水线基本都是单向的。
+ * Netty是这样规定的：入站处理器的执行次序是从前到后，出站处理器的执行次序是从后到前。
+ * 总之，IO事件在流水线上的执行次序与IO事件的类型是有关系的；流动过程中经过的处理器类型也是和IO操作的类型有关的
+ *
+ * <p>
+ *     Netty 业务处理器流水线ChannelPipeline是基于责任链设计模式设计的双向链表，支持动态添加和删除业务处理器
+ *
+ * <p>
+ * Channel是无状态的，但Pipeline是有状态的，保存了Channel的关系
+ *
  * A list of {@link ChannelHandler}s which handles or intercepts inbound events and outbound operations of a
  * {@link Channel}.  {@link ChannelPipeline} implements an advanced form of the
  * <a href="https://www.oracle.com/technetwork/java/interceptingfilter-142169.html">Intercepting Filter</a> pattern

@@ -25,6 +25,7 @@ import io.netty.util.concurrent.EventExecutor;
 import java.nio.channels.Channels;
 
 /**
+ * ChannelHandlerContext充当中间角色联系Handler和Pipeline
  * Enables a {@link ChannelHandler} to interact with its {@link ChannelPipeline}
  * and other handlers. Among other things a handler can notify the next {@link ChannelHandler} in the
  * {@link ChannelPipeline} as well as modify the {@link ChannelPipeline} it belongs to dynamically.
@@ -144,6 +145,10 @@ public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvok
     @Override
     ChannelHandlerContext fireChannelWritabilityChanged();
 
+    /**
+     * 如果通过ChannelHandlerContext调用出站和入站方法，就只从当前节点开始往同类型的下一站处理器传播，而不是在整条流水线从头到尾完整的传播
+     * @return
+     */
     @Override
     ChannelHandlerContext read();
 
@@ -151,6 +156,7 @@ public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvok
     ChannelHandlerContext flush();
 
     /**
+     * 关联的Pipeline
      * Return the assigned {@link ChannelPipeline}
      */
     ChannelPipeline pipeline();

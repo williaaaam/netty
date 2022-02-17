@@ -228,6 +228,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     /**
+     * 返回端口绑定的异步任务ChannelFuture
+     *
      * Create a new {@link Channel} and bind it.
      */
     public ChannelFuture bind() {

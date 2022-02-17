@@ -27,6 +27,12 @@ public class ITDragonNIODoubleServerHandler implements Runnable{
 			// 绑定端口
 			serverChannel.socket().bind(new InetSocketAddress(port));
 			// 通道注册到多路复用器上，并监听阻塞事件
+			/**
+			 * 某个SocketChannel传输通道如果完成了和对端的三次握手过程，就会发生“连接就绪”（OP_CONNECT）事件；某
+			 * 个ServerSocketChannel服务器连接监听通道，在监听到一个新连接到来时，则会发生“接收就绪”（OP_ACCEPT）事件；
+			 * 一个SocketChannel通道有数据可读，就会发生“读就绪”（OP_READ）事件；
+			 * 一个SocketChannel通道等待数据写入，就会发生“写就绪”（OP_WRITE）事件。
+			 */
 			serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 			// 标记服务器已开启
 			started = true;

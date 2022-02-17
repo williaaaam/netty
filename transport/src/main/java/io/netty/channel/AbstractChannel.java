@@ -47,6 +47,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     private final Channel parent;
     private final ChannelId id;
     private final Unsafe unsafe;
+    // 通道拥有ChannelPipeline类型成员变量
     private final DefaultChannelPipeline pipeline;
     private final VoidChannelPromise unsafeVoidPromise = new VoidChannelPromise(this, false);
     private final CloseFuture closeFuture = new CloseFuture(this);
@@ -65,13 +66,15 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     /**
      * Creates a new instance.
      *
-     * @param parent
+     * @param parent 父通道  对于连接监听通道（如NioServerSocketChannel）来说，其parent属性的值为null；对于传输通道（如NioSock-etChannel）来说，其parent属性的值为接收到该连接的监听通道。
      *        the parent of this channel. {@code null} if there's no parent.
      */
     protected AbstractChannel(Channel parent) {
         this.parent = parent;
         id = newId();
+        // 新建一个底层的NIO通道，完成实际的IO操作
         unsafe = newUnsafe();
+        // 每个通道都有一条ChannelPipeline处理器流水线
         pipeline = newChannelPipeline();
     }
 

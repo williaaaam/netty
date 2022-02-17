@@ -18,6 +18,7 @@ package io.netty.channel;
 import java.net.SocketAddress;
 
 /**
+ * 当业务处理完成后，需要操作Java NIO底层通道时，通过一系列的ChannelOutboundHandler出站处理器完成Netty通道到底层通道的操作，比如建立底层连接、断开底层连接、写入底层Java NIO通道等。
  * {@link ChannelHandler} which will get notified for IO-outbound-operations.
  */
 public interface ChannelOutboundHandler extends ChannelHandler {
@@ -72,11 +73,13 @@ public interface ChannelOutboundHandler extends ChannelHandler {
     void deregister(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception;
 
     /**
+     * 出站处理举例：出站（从Handler到Channel）读取传输数据
      * Intercepts {@link ChannelHandlerContext#read()}.
      */
     void read(ChannelHandlerContext ctx) throws Exception;
 
     /**
+     * 出站处理举例：出站（从Handler到Channel）写操作
     * Called once a write operation is made. The write operation will write the messages through the
      * {@link ChannelPipeline}. Those are then ready to be flushed to the actual {@link Channel} once
      * {@link Channel#flush()} is called

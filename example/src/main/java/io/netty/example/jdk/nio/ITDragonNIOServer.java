@@ -39,6 +39,9 @@ public class ITDragonNIOServer implements Runnable {
             // 1.开启多路复用器
             selector = Selector.open();
             // 2.打开服务器通道(网络读写通道)
+            /**
+             * ServerSocketChannel仅应用于服务端，而SocketChannel同时处于服务端和客户端。所以，对于一个连接，两端都有一个负责传输的SocketChannel。
+             */
             ServerSocketChannel channel = ServerSocketChannel.open();
             // 3.设置服务器通道为非阻塞模式，true为阻塞，false为非阻塞
             channel.configureBlocking(false);
@@ -50,6 +53,8 @@ public class ITDragonNIOServer implements Runnable {
              * SelectionKey.OP_WRITE 	: 表示关注写数据就绪事件
              * SelectionKey.OP_CONNECT: 表示关注socket channel的连接完成事件
              * SelectionKey.OP_ACCEPT : 表示关注server-socket channel的accept事件
+             *
+             * 注册到选择器的通道必须处于非阻塞模式下，否则将抛出IllegalBlockingModeException异常。这意味着，FileChannel不能与选择器一起使用，因为FileChannel只有阻塞模式，不能切换到非阻塞模式；而socket相关的所有通道都可以。其次，一个通道并不一定支持所有的四种IO事件。例如，服务器监听通道ServerSocketChannel仅支持Accept（接收到新连接）IO事件，而传输通道SocketChannel则不同，它不支持Ac-cept类型的IO事件。
              */
             channel.register(selector, SelectionKey.OP_ACCEPT);
             System.out.println("Server start >>>>>>>>> port :" + PORT);
@@ -70,6 +75,7 @@ public class ITDragonNIOServer implements Runnable {
                  * select方法的返回值表示就绪通道的个数。
                  */
                 // 1.多路复用器监听阻塞
+                // select()方法的返回值是整数类型（int），表示发生了IO事件的数量，即从上一次select到这一次select之间有多少通道发生了IO事件，更加准确地说是发生了选择器感兴趣（注册过）的IO事件数。
                 selector.select(); // 客户端执行后socketChannel.connect或者socketChannel.write，Server代码继续执行
                 // 2.多路复用器已经选择的结果集
                 Iterator<SelectionKey> selectionKeys = selector.selectedKeys().iterator();

@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 在Netty的NioSocketChannel内部封装了一个Java NIO的SelectableChannel成员，通过对该内部的Java NIO通道的封装，
+ * 对Netty的NioSocketChannel通道上的所有IO操作最终都会落地到Java NIO的SelectableChannel底层通道。
  * A {@link io.netty.channel.socket.ServerSocketChannel} implementation which uses
  * NIO selector based implementation to accept new connections.
  */

@@ -314,6 +314,7 @@ public class EmbeddedChannel extends AbstractChannel {
     }
 
     /**
+     * 从EmbeddedChannel中读取出出站数据，返回经过流水线最后一个出站处理器处理之后出站数据，如果没有数据，返回null
      * Read data from the outbound. This may return {@code null} if nothing is readable.
      */
     @SuppressWarnings("unchecked")
@@ -326,6 +327,9 @@ public class EmbeddedChannel extends AbstractChannel {
     }
 
     /**
+     * 向通道写入入站数据，模拟真实通道接收数据的场景；也就是说，这些写入的数据会被流水线上的入站处理器所处理到
+     *
+     * 使用场景：测试入站处理器
      * Write messages to the inbound of this {@link Channel}.
      *
      * @param msgs the messages to be written
@@ -340,6 +344,7 @@ public class EmbeddedChannel extends AbstractChannel {
 
         ChannelPipeline p = pipeline();
         for (Object m: msgs) {
+            // 回调channelRead()方法
             p.fireChannelRead(m);
         }
 

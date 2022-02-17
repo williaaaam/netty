@@ -28,6 +28,8 @@ import java.net.SocketAddress;
 
 
 /**
+ * 代表网络连接,Handler是无状态的，不保存和Channel的相关信息，将自己做的通用，以便给不同的Channel使用；
+ * Pipeline是有状态的，保存了Channel的关系
  * A nexus to a network socket or a component which is capable of I/O
  * operations such as read, write, connect, and bind.
  * <p>
@@ -187,6 +189,10 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      */
     ByteBufAllocator alloc();
 
+    /**
+     * 此方法的作用为读取通道数据，并且启动入站处理。具体来说，从内部的Java NIO Channel通道读取数据，然后启动内部的Pipeline流水线，开启数据读取的入站处理。此方法的返回通道自身用于链式调用。
+     * @return
+     */
     @Override
     Channel read();
 
@@ -194,6 +200,7 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
     Channel flush();
 
     /**
+     * 调用Java NIO完成实际通道传输的类
      * <em>Unsafe</em> operations that should <em>never</em> be called from user-code. These methods
      * are only provided to implement the actual transport, and must be invoked from an I/O thread except for the
      * following methods:
