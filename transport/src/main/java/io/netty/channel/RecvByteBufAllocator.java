@@ -23,6 +23,7 @@ import io.netty.util.internal.UnstableApi;
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
+ * 。Netty设计了一个RecvByteBu-fAllocator大小推测接口和一系列的大小推测实现类，以帮助进行缓冲区大小的计算和推测。
  * Allocates a new receive buffer whose capacity is probably large enough to read all inbound data and small enough
  * not to waste its space.
  */

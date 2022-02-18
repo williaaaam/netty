@@ -36,6 +36,7 @@ public interface ReferenceCounted {
     int refCnt();
 
     /**
+     * 引入计数增加1
      * Increases the reference count by {@code 1}.
      */
     ReferenceCounted retain();

@@ -1,4 +1,4 @@
-package ohmyexample.test.demo;
+package ohmyexample.test.embedded;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

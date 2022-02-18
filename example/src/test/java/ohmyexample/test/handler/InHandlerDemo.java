@@ -17,6 +17,7 @@ public class InHandlerDemo extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         LOGGER.info("被调用 channelRegistered（）");
+        // 如果注释下面这行代码，则流水线被截断
         super.channelRegistered(ctx);
     }
 
@@ -38,11 +39,19 @@ public class InHandlerDemo extends ChannelInboundHandlerAdapter {
         super.channelInactive(ctx);
     }
 
+    /**
+     * 第一个入站处理器，msg一定是ByteBuf类型
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         LOGGER.info("被调用 channelRead（）");
-        // 如果不调用父类的channelRead（）,则InHandlerDemo2#channelRead()方法不会被调用
+        // 如果不调用父类的channelRead（）,则InHandlerDemo2#channelRead()方法不会被调用;并且需要手动释放ByteBuf
+        // 入站消息没有被处理，或者说来到了流水线末尾，释放缓冲区
         super.channelRead(ctx, msg);
+        // byteBuf.release() // 如果没有调用super.channelRead() 手动释放内存
     }
 
     @Override

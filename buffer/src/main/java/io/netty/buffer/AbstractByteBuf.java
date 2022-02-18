@@ -67,11 +67,14 @@ public abstract class AbstractByteBuf extends ByteBuf {
 
     static final ResourceLeakDetector<ByteBuf> leakDetector =
             ResourceLeakDetectorFactory.instance().newResourceLeakDetector(ByteBuf.class);
-
+    // 指示读取的起始位置。每读取一个字节，readerIndex自动增加1。一旦readerIndex与wri-terIndex相等，则表示ByteBuf不可读了。
     int readerIndex;
+    // 指示写入的起始位置。每写一个字节，writerIndex自动增加1。一旦增加到writerIndex与capacity()容量相等，则表示ByteBuf不可写了。注意，ca-pacity()是一个成员方法，不是一个成员属性，表示ByteBuf中可以写入的容量，而且它的值不一定是最大容量值。
     int writerIndex;
     private int markedReaderIndex;
     private int markedWriterIndex;
+
+    // 表示ByteBuf可以扩容的最大容量。当向ByteBuf写数据的时候，如果容量不足，可以进行扩容。扩容的最大限度由maxCapacity来设定，超过maxCapacity就会报错。
     private int maxCapacity;
 
     protected AbstractByteBuf(int maxCapacity) {
@@ -282,14 +285,15 @@ public abstract class AbstractByteBuf extends ByteBuf {
     }
 
     final void ensureWritable0(int minWritableBytes) {
+        // 获取写指针
         final int writerIndex = writerIndex();
         final int targetCapacity = writerIndex + minWritableBytes;
         // using non-short-circuit & to reduce branching - this is a hot path and targetCapacity should rarely overflow
-        if (targetCapacity >= 0 & targetCapacity <= capacity()) {
+        if (targetCapacity >= 0 & targetCapacity <= capacity()) { // 不需要扩容
             ensureAccessible();
             return;
         }
-        if (checkBounds && (targetCapacity < 0 || targetCapacity > maxCapacity)) {
+        if (checkBounds && (targetCapacity < 0 || targetCapacity > maxCapacity)) { // 写指针超过最大容量，直接报错
             ensureAccessible();
             throw new IndexOutOfBoundsException(String.format(
                     "writerIndex(%d) + minWritableBytes(%d) exceeds maxCapacity(%d): %s",
@@ -1205,6 +1209,10 @@ public abstract class AbstractByteBuf extends ByteBuf {
         return duplicate().retain();
     }
 
+    /**
+     * slice():
+     * @return
+     */
     @Override
     public ByteBuf slice() {
         return slice(readerIndex, readableBytes());
@@ -1215,6 +1223,17 @@ public abstract class AbstractByteBuf extends ByteBuf {
         return slice().retain();
     }
 
+    /**
+     * slice分片不支持写，因为maxCapacity = writerIndex
+     *
+     * 切片不会复制源ByteBuf的底层数据，底层数据和源ByteBuf底层数组是同一个
+     *
+     * 切片不会改变源ByteBuf的引用计数
+     *
+     * @param index
+     * @param length
+     * @return
+     */
     @Override
     public ByteBuf slice(int index, int length) {
         ensureAccessible();

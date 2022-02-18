@@ -31,6 +31,7 @@ public final class ReferenceCountUtil {
     }
 
     /**
+     * 增加一次缓冲区引用计数的静态方法，防止缓冲区被释放
      * Try to call {@link ReferenceCounted#retain()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
@@ -80,6 +81,8 @@ public final class ReferenceCountUtil {
     }
 
     /**
+     * 减少一次缓冲区引用计数的静态方法，如果引用计数为0，缓冲区将被释放。
+     *
      * Try to call {@link ReferenceCounted#release()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */

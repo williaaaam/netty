@@ -120,9 +120,15 @@ final class HeapByteBufUtil {
         memory[index + 3] = (byte) (value >>> 24);
     }
 
+    /**
+     * 大顶端
+     * @param memory
+     * @param index
+     * @param value
+     */
     static void setLong(byte[] memory, int index, long value) {
-        memory[index]     = (byte) (value >>> 56);
-        memory[index + 1] = (byte) (value >>> 48);
+        memory[index]     = (byte) (value >>> 56); // 前8个字节
+        memory[index + 1] = (byte) (value >>> 48); //
         memory[index + 2] = (byte) (value >>> 40);
         memory[index + 3] = (byte) (value >>> 32);
         memory[index + 4] = (byte) (value >>> 24);

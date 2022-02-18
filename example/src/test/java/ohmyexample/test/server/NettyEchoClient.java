@@ -1,17 +1,20 @@
 package ohmyexample.test.server;
 
-import io.netty.bootstrap.ServerBootstrap;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.ReferenceCountUtil;
-import ohmyexample.test.handler.InHandlerDemo;
+import ohmyexample.test.server.handler.NettyEchoClientHandler;
 import ohmyexample.test.server.handler.NettyEchoServerHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Scanner;
 
 /**
  * 客户端程序不一定非的是用Netty编写，OIO, NIO均可，因为Netty底层也是使用Java NIO开发的，都使用了TCP通信协议
@@ -20,60 +23,47 @@ import org.slf4j.LoggerFactory;
  * @description
  * @date 2022/2/16
  */
-public class NettyDiscardServer {
+public class NettyEchoClient {
 
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NettyDiscardServer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NettyEchoClient.class);
 
     private final int serverPort;
     // 创建服务端引导类
     // Netty服务引导类将组件组装在一起，帮助快速实现Netty服务器的监听和启动
-    private ServerBootstrap b = new ServerBootstrap();
+    private Bootstrap b = new Bootstrap();
 
-    public NettyDiscardServer(int serverPort) {
+    public NettyEchoClient(int serverPort) {
         this.serverPort = serverPort;
     }
 
 
     public static void main(String[] args) {
         int port = 8899;
-        new NettyDiscardServer(port).runServer();
+        new NettyEchoClient(port).runClient();
     }
 
     /**
      * Netty中对应的反应器组件有多种，不同应用通信场景用到的反应器组件各不相同。
      * 一般来说，对应于多线程的Java NIO通信的应用场景，Netty对应的反应器组件为NioEventLoopGroup。
      */
-    public void runServer() {
-        // 创建反应器Reactor轮询组,Reactor负责IO事件的查询和分发
-        // boss和worker共同构成主从Reactor模式
+    public void runClient() {
 
-        // bossLoopGroup负责通道新连接的IO事件的监听
-        // 负责新连接的监听和接受
-        EventLoopGroup bossLoopGroup = new NioEventLoopGroup(1);
-
-        // workerLoopGroup线程池负责传输通道的IO时间的处理和数据传输
-        // 负责IO传输事件的轮询与分发
+        // 创建反应器轮询组
         EventLoopGroup workerLoopGroup = new NioEventLoopGroup();
 
         try {
             //1. 为引导类对象设置反应器轮询组
-            b.group(bossLoopGroup, workerLoopGroup);
+            b.group(workerLoopGroup);
             //2. 设置nio类型的通道，当然也可以设置BIO同步阻塞式通道
-            b.channel(NioServerSocketChannel.class);
+            b.channel(NioSocketChannel.class);
             //3. 设置监听端口
-            b.localAddress("127.0.0.1", serverPort);
-            //4. 给父通道设置参数,开启底层TCP心跳机制，true表示开启
-            b.option(ChannelOption.SO_KEEPALIVE, true);
-            // 设置父通道的内存分配器
+            b.remoteAddress("127.0.0.1", serverPort);
+            // 设置通道的内存分配器
             b.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-            // 设置子通道的内存分配器
-            b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-            //4.1 给父通道设置参数
-            //b.childOption()
 
             //5. 装配子通道的流水线
-            b.childHandler(new ChannelInitializer<SocketChannel>() {
+            b.handler(new ChannelInitializer<SocketChannel>() {
                 // 有连接到达时会创建一个子通道，并初始化
                 // 子通道创建后会执行initChannel方法
                 // SocketChannel 表示初始化的通道类型，要和配置在引导器上的通道类型对应上
@@ -81,21 +71,38 @@ public class NettyDiscardServer {
                 protected void initChannel(SocketChannel ch) { // 每当父通道成功接收到一个连接并创建成功一个子通道后，就会初始化子通道，此时这里配置的ChannelInitializer实例就会被调用。
                     // 流水线的职责：负责管理通道中的处理器
                     // 向“子通道”（传输通道）流水线装配一个处理器
-                    ch.pipeline().addLast(NettyEchoServerHandler.INSTANCE);
+                    ch.pipeline().addLast(NettyEchoClientHandler.INSTANCE);
                 }
             });
-            // 6. 开始绑定服务器
-            // 通过调用sync同步方法阻塞直到绑定成功
-            ChannelFuture channelFuture = b.bind().sync();
-            // Logger.info(" 服务器启动成功，监听端口: " +
-            // channelFuture.channel().localAddress();
-            // 7. 等待通道关闭的异步任务结束
-            // 服务监听通道会一直等待通道关闭的异步任务结束
 
-            // Future异步回调
-            // 如果要阻塞当前线程直到通道关闭，可以调用通道的closeFuture()方法，以获取通道关闭的异步任务。当通道被关闭时，closeFuture实例的sync()方法会返回。
-            ChannelFuture closeFuture = channelFuture.channel().closeFuture();
-            closeFuture.sync();
+            ChannelFuture channelFuture = b.connect();
+            channelFuture.addListener((futureListener) -> {
+                if (futureListener.isSuccess()) {
+                    LOGGER.info("EchoClient客户端连接成功!");
+                } else {
+                    LOGGER.info("EchoClient客户端连接失败!");
+                }
+            });
+
+            // 阻塞直到连接成功
+            channelFuture.sync();
+
+            Channel channel = channelFuture.channel();
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("请输入发送内容：");
+            while (scanner.hasNext()) {
+                String next = scanner.next();
+                if ("quit".equals(next)) {
+                    break;
+                }
+                byte[] bytes = ("2022-02-18" + " >>" + next).getBytes("UTF-8");
+                // PooledByteBufAllocator
+                ByteBuf buffer = channel.alloc().buffer();
+                buffer.writeBytes(bytes);
+                channel.writeAndFlush(buffer);
+                System.out.println("请输入发送内容：");
+            }
+            channel.closeFuture().sync();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -105,7 +112,6 @@ public class NettyDiscardServer {
              * 关闭反应器轮询组，同时会关闭内部的子反应器线程，也会关闭内部的选择器、内部的轮询线程以及负责查询的所有子通道。
              */
             workerLoopGroup.shutdownGracefully();
-            bossLoopGroup.shutdownGracefully();
         }
     }
 

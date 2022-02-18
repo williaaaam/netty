@@ -133,13 +133,16 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
         @Override
         public final void read() {
+            //channel的config信息
             final ChannelConfig config = config();
             if (shouldBreakReadReady(config)) {
                 clearReadPending();
                 return;
             }
             final ChannelPipeline pipeline = pipeline();
+            //获取通道的缓冲区分配器
             final ByteBufAllocator allocator = config.getAllocator();
+            //缓冲区分配时的大小推测与计算组件
             final RecvByteBufAllocator.Handle allocHandle = recvBufAllocHandle();
             allocHandle.reset(config);
 
@@ -147,7 +150,11 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             boolean close = false;
             try {
                 do {
+                    // 使用缓冲区分配器、大小计算组件一起
+                    // 由分配器按照计算好的大小分配的一个缓冲区
                     byteBuf = allocHandle.allocate(allocator);
+                    // 入站处理：Channel -> Handler
+                    // 通过Java通道读取数据到Netty缓冲区ByteBuf
                     allocHandle.lastBytesRead(doReadBytes(byteBuf));
                     if (allocHandle.lastBytesRead() <= 0) {
                         // nothing was read. release the buffer.
@@ -163,6 +170,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
                     allocHandle.incMessagesRead(1);
                     readPending = false;
+                    // 发送数据到流水线，进行入站处理
                     pipeline.fireChannelRead(byteBuf);
                     byteBuf = null;
                 } while (allocHandle.continueReading());

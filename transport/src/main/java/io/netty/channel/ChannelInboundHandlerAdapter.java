@@ -96,6 +96,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
     @Skip
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        // 通过上下文进行入站读操作的流水线传播
         ctx.fireChannelRead(msg);
     }
 

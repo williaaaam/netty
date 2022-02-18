@@ -135,6 +135,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
             } finally {
                 ChannelPipeline pipeline = ctx.pipeline();
                 if (pipeline.context(this) != null) {
+                    // ChannelInitializer在完成了通道的初始化之后，为什么要将自己从流水线中删除呢？原因很简单，就是一条通道流水线只需要做一次装配工作。
                     pipeline.remove(this);
                 }
             }

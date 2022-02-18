@@ -149,6 +149,9 @@ public final class Unpooled {
     }
 
     /**
+     * 零拷贝
+     *
+     * 通过调用Unpooled.wrappedBuffer()方法将bytes包装为一个UnpooledHeapByteBuf对象，在包装的过程中不会有拷贝操作，所得到的ByteBuf对象和bytes数组共用同一个存储空间，对bytes的修改也是对ByteBuf对象的修改。
      * Creates a new big-endian buffer which wraps the specified {@code array}.
      * A modification on the specified array's content will be visible to the
      * returned buffer.

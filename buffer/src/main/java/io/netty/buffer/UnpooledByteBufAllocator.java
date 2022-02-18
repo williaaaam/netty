@@ -22,6 +22,7 @@ import io.netty.util.internal.StringUtil;
 import java.nio.ByteBuffer;
 
 /**
+ * UnpooledByteBufAllocator是普通的未池化ByteBuf分配器，没有把ByteBuf放入池中，每次被调用时，返回一个新的ByteBuf实例；使用完之后，通过Java的垃圾回收机制回收或者直接释放（对于直接内存而言）。
  * Simplistic {@link ByteBufAllocator} implementation that does not pool anything.
  */
 public final class UnpooledByteBufAllocator extends AbstractByteBufAllocator implements ByteBufAllocatorMetricProvider {

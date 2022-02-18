@@ -1195,6 +1195,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     "Discarded inbound message {} that reached at the tail of the pipeline. " +
                             "Please check your pipeline configuration.", msg);
         } finally {
+            // 释放缓冲区
             ReferenceCountUtil.release(msg);
         }
     }
@@ -1325,6 +1326,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
             implements ChannelOutboundHandler, ChannelInboundHandler {
         // 传输操作类实例：完成通道最终的输入、输出等操作
         // 此类专供Netty内部使用，应用程序不能使用，所以取名unsafe
+        // 通过unsafe传输实例将二进制数据写入底层传输通道，完成整个传输处理过程
         private final Unsafe unsafe;
 
         HeadContext(DefaultChannelPipeline pipeline) {

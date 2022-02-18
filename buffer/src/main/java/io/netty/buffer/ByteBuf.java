@@ -30,6 +30,16 @@ import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
+ * writeTYPE(TYPE value)：写入基础数据类型的数据
+ * setTYPE(TYPE value)：基础数据类型的设置，不改变wri-terIndex指针值。
+ * readTYPE()：读取基础数据类型
+ *
+ * getTYPE()：读取基础数据类型，并且不改变readerIndex读指针的值，具体为getByte()、getBoolean()、getChar()、getShort()、getInt()、getLong()、getFloat()、getDouble()。
+ *
+ * <p>
+ *
+ * ByteBuf引用计数的大致规则如下：在默认情况下，当创建完一个ByteBuf时，引用计数为1；每次调用retain()方法，引用计数加1；每次调用release()方法，引用计数减1；如果引用为0，再次访问这个ByteBuf对象，将会抛出异常；如果引用为0，表示这个ByteBuf没有哪个进程引用，它占用的内存需要回收。
+ *
  * A random and sequential accessible sequence of zero or more bytes (octets).
  * This interface provides an abstract view for one or more primitive byte
  * arrays ({@code byte[]}) and {@linkplain ByteBuffer NIO buffers}.
@@ -248,6 +258,7 @@ import java.nio.charset.UnsupportedCharsetException;
 public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
 
     /**
+     * ByteBuf容量是废弃字节数+可读字节数+可写字节数
      * Returns the number of bytes (octets) this buffer can contain.
      */
     public abstract int capacity();
@@ -263,6 +274,9 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract ByteBuf capacity(int newCapacity);
 
     /**
+     * 表示ByteBuf可以扩容的最大容量。当向ByteBuf写数据的时候，如果容量不足，可以进行扩容。扩容的最大限度由maxCapacity来设定，超过maxCapacity就会报错。
+     * <p>
+     * ByteBuf能够容纳的最大字节数
      * Returns the maximum allowed capacity of this buffer. This value provides an upper
      * bound on {@link #capacity()}.
      */
@@ -404,18 +418,21 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract ByteBuf setIndex(int readerIndex, int writerIndex);
 
     /**
+     * readableBytes = writerIndex - readerIndex
      * Returns the number of readable bytes which is equal to
      * {@code (this.writerIndex - this.readerIndex)}.
      */
     public abstract int readableBytes();
 
     /**
+     * 可写字节数：capacity - writeIndex
      * Returns the number of writable bytes which is equal to
      * {@code (this.capacity - this.writerIndex)}.
      */
     public abstract int writableBytes();
 
     /**
+     * 取得最大的可写字节数，它的值等于最大容量maxCapacity减去writerIndex。
      * Returns the maximum possible number of writable bytes, which is equal to
      * {@code (this.maxCapacity - this.writerIndex)}.
      */
@@ -431,6 +448,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     }
 
     /**
+     * writeIndex > readerIndex
      * Returns {@code true}
      * if and only if {@code (this.writerIndex - this.readerIndex)} is greater
      * than {@code 0}.
@@ -443,6 +461,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract boolean isReadable(int size);
 
     /**
+     * 返回false不代表不能再往ByteBuf中写数据，Netty发现写不进去会自动扩容
      * Returns {@code true}
      * if and only if {@code (this.capacity - this.writerIndex)} is greater
      * than {@code 0}.
@@ -1950,6 +1969,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract ByteBuf writeBytes(ByteBuf src, int srcIndex, int length);
 
     /**
+     * 把入参src字节数组中的数据全部写到ByteBuf
      * Transfers the specified source array's data to this buffer starting at
      * the current {@code writerIndex} and increases the {@code writerIndex}
      * by the number of the transferred bytes (= {@code src.length}).
@@ -2175,6 +2195,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract ByteBuf copy(int index, int length);
 
     /**
+     * 切片浅拷贝
      * Returns a slice of this buffer's readable bytes. Modifying the content
      * of the returned buffer or this buffer affects each other's content
      * while they maintain separate indexes and marks.  This method is
@@ -2227,6 +2248,12 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract ByteBuf retainedSlice(int index, int length);
 
     /**
+     * 整体浅拷贝
+     * 不会改变源ByteBuf引用计数
+     * duplicate()读写指针、最大容量值，与源ByteBuf读写指针相同
+     * <p>
+     *     duplicate不会复制底层数据
+     *
      * Returns a buffer which shares the whole region of this buffer.
      * Modifying the content of the returned buffer or this buffer affects
      * each other's content while they maintain separate indexes and marks.
@@ -2271,6 +2298,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract int nioBufferCount();
 
     /**
+     * 将ByteBuf实例合并成一个新的Java NIO ByteBuffer缓冲区
      * Exposes this buffer's readable bytes as an NIO {@link ByteBuffer}. The returned buffer
      * either share or contains the copied content of this buffer, while changing the position
      * and limit of the returned NIO buffer does not affect the indexes and marks of this buffer.
@@ -2346,6 +2374,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract ByteBuffer[] nioBuffers(int index, int length);
 
     /**
+     * 堆内存缓冲区返回true, 直接内存或CompositeByteBuf返回false
      * Returns {@code true} if and only if this buffer has a backing byte array.
      * If this method returns true, you can safely call {@link #array()} and
      * {@link #arrayOffset()}.
@@ -2361,6 +2390,7 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     public abstract byte[] array();
 
     /**
+     * 返回第一个字节在数组中的偏移量
      * Returns the offset of the first byte within the backing byte array of
      * this buffer.
      *

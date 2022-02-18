@@ -42,6 +42,7 @@ import java.util.NoSuchElementException;
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
+ * CompositeByteBuf是Netty为了减少内存复制而提供的组合缓冲区
  * A virtual buffer which shows multiple buffers as a single merged buffer.  It is recommended to use
  * {@link ByteBufAllocator#compositeBuffer()} or {@link Unpooled#wrappedBuffer(ByteBuf...)} instead of calling the
  * constructor explicitly.
@@ -392,6 +393,7 @@ public class CompositeByteBuf extends AbstractReferenceCountedByteBuf implements
                 if (b == null) {
                     break;
                 }
+                // 零拷贝,浅拷贝
                 Component c = newComponent(ensureAccessible(b), nextOffset);
                 components[ci] = c;
                 nextOffset = c.endOffset;
@@ -761,6 +763,10 @@ public class CompositeByteBuf extends AbstractReferenceCountedByteBuf implements
         return true;
     }
 
+    /**
+     * 如果CompositeByteBuf内部只存在一个ByteBuf，则调用其hasArray()方法，返回的底层唯一ByteBuf实例hasArray()方法的值；如果有多个ByteBuf，则其hasArray()方法会返回false。
+     * @return
+     */
     @Override
     public boolean hasArray() {
         switch (componentCount) {

@@ -61,7 +61,9 @@ import static io.netty.channel.ChannelHandlerMask.mask;
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
+    // 双向链表的指针：指向后继
     volatile AbstractChannelHandlerContext next;
+    // 双向链表的指针：指向前驱
     volatile AbstractChannelHandlerContext prev;
 
     private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
@@ -84,14 +86,16 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
     private static final int INIT = 0;
-
+    // 所属流水线
     private final DefaultChannelPipeline pipeline;
+    // 上下文节点名称，可以在加入流水线时指定
     private final String name;
     private final boolean ordered;
     private final int executionMask;
 
     // Will be set to null if no child executor should be used, otherwise it will be set to the
     // child executor.
+    // 节点的执行线程
     final EventExecutor executor;
     private ChannelFuture succeededFuture;
 
@@ -360,10 +364,15 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
 
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
         final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+        // 获取后继的处理线程
         EventExecutor executor = next.executor();
-        if (executor.inEventLoop()) {
+        if (executor.inEventLoop()) { // 确保执行的线程是该Context实例的executor成员线程以保证线程安全
+            // 如果当前线程为后继的处理线程
+            // 执行后继上下文所包装的处理器
             next.invokeChannelRead(m);
         } else {
+            // 如果当前处理线程不是后继的处理线程，则提交到后继处理线程去排队
+            // 保障该节点的处理器被设置的线程调用，避免发生线程安全问题
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -873,6 +882,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         return false;
     }
 
+    // 在双向链表中向后查找，找到下一个入站节点（同类的后继）
     private AbstractChannelHandlerContext findContextInbound(int mask) {
         AbstractChannelHandlerContext ctx = this;
         EventExecutor currentExecutor = executor();
