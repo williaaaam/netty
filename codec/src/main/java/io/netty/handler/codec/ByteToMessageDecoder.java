@@ -32,6 +32,16 @@ import static io.netty.util.internal.ObjectUtil.checkPositive;
 import static java.lang.Integer.MAX_VALUE;
 
 /**
+ * Netty解码器就是一个入站处理器，负责处理入站数据；
+ *
+ * 标准解码器的职责：将输入类型为ByteBuf的数据进行解码，输出一个个的Java POJO对象；
+ *
+ * Netty中的解码器都是Inbound入站处理器类型，都直接或间接实现了入站处理的超级接口ChannelInboundHandler
+ *
+ *
+ * 作为解码器的父类，ByteToMessageDecoder仅仅提供了一个整体框架：它会调用子类的decode()方法，完成具体的二进制字节解码，然后会获取子类解码之后的Object结果，放入自己内部的结果列表List<Object>中，最终父类负责将List<Object>中的元素一个一个地传递给下一站。
+ * 从这个角度来说，ByteToMessageDecoder在设计上使用了模板模式（Tem-plate Pattern）。
+ *
  * {@link ChannelInboundHandlerAdapter} which decodes bytes in a stream-like fashion from one {@link ByteBuf} to an
  * other Message type.
  *
@@ -265,6 +275,12 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      */
     protected void handlerRemoved0(ChannelHandlerContext ctx) throws Exception { }
 
+    /**
+     *
+     * @param ctx
+     * @param msg 如果msg不是ByteBuf类型，则不会进行解码工作
+     * @throws Exception
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof ByteBuf) {
@@ -480,6 +496,9 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
     }
 
     /**
+     * 它将上一站传过来的输入到ByteBuf中的数据进行解码，解码出一个List<Object>对象列表；然后，迭代List<Object>列表，逐个将Java POJO对象传入下一站Inbound入站处理器。
+     *
+     * 模板方法：将入站的ByteBuf解码出来的所有Object(Java POJO)实例加入父类的List<Object>,父类在执行完子类的解码后，将List<Object>收集到的结果一个个地传递到下一个Inbound入站处理器
      * Decode the from one {@link ByteBuf} to an other. This method will be called till either the input
      * {@link ByteBuf} has nothing to read when return from this method or till nothing was read from the input
      * {@link ByteBuf}.
