@@ -95,7 +95,7 @@ public class NettyEchoClient {
                 if ("quit".equals(next)) {
                     break;
                 }
-                byte[] bytes = ("2022-02-18" + " >>" + next).getBytes("UTF-8");
+                byte[] bytes = ("2022-02-18" + " >> " + next).getBytes("UTF-8");
                 // PooledByteBufAllocator
                 ByteBuf buffer = channel.alloc().buffer();
                 buffer.writeBytes(bytes);

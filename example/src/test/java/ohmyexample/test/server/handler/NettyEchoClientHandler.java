@@ -16,7 +16,7 @@ import java.io.UnsupportedEncodingException;
  * @date 2022/2/18
  */
 
-// 这个注解的作用是标注一个Ha-dler实例可以被多个通道安全地共享（多个通道的流水线可以加入同一个Handler实例）。这种共享操作，Netty默认是不允许的。
+// 这个注解的作用是标注一个Handler实例可以被多个通道安全地共享（多个通道的流水线可以加入同一个Handler实例）。这种共享操作，Netty默认是不允许的。
 @ChannelHandler.Sharable
 public class NettyEchoClientHandler extends ChannelInboundHandlerAdapter {
 

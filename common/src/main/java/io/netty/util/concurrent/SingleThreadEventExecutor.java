@@ -469,6 +469,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         long runTasks = 0;
         long lastExecutionTime;
         for (;;) {
+            //执行任务
             safeExecute(task);
 
             runTasks ++;
@@ -824,6 +825,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     private void execute(Runnable task, boolean immediate) {
+        // 当前线程是不是eventLoop
         boolean inEventLoop = inEventLoop();
         addTask(task);
         if (!inEventLoop) {
@@ -944,6 +946,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) {
                 boolean success = false;
                 try {
+                    // 启动线程
                     doStartThread();
                     success = true;
                 } finally {
@@ -975,6 +978,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void doStartThread() {
         assert thread == null;
+        // 真正线程池
         executor.execute(new Runnable() {
             @Override
             public void run() {

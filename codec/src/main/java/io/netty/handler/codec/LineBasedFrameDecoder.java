@@ -22,6 +22,7 @@ import io.netty.util.ByteProcessor;
 import java.util.List;
 
 /**
+ * 回车换行解码器
  * A decoder that splits the received {@link ByteBuf}s on line endings.
  * <p>
  * Both {@code "\n"} and {@code "\r\n"} are handled.
@@ -34,13 +35,16 @@ import java.util.List;
  * For a more general delimiter-based decoder, see {@link DelimiterBasedFrameDecoder}.
  */
 public class LineBasedFrameDecoder extends ByteToMessageDecoder {
-
+    //读取的最大长度,如果连续读取到最大长度后仍然没有发现换行符，就会抛出异常，同时忽略掉之前读到的异常码流
     /** Maximum length of a frame we're willing to decode.  */
     private final int maxLength;
+    //如果设置成true，当发现解析的数据超过maxLength就立马报错，否则当整个帧的数据解析完后才报错
     /** Whether or not to throw an exception as soon as we exceed maxLength. */
     private final boolean failFast;
+    // 解码后是否去掉分隔符
     private final boolean stripDelimiter;
 
+    //如果没有找到分隔符且读取的数据超过最大长度，我们将将其设置为true（为了防止ByteBuf无限积压，引起系统内存溢出，丢弃之前的异常码流）
     /** True if we're discarding input because we're already over maxLength.  */
     private boolean discarding;
     private int discardedBytes;
@@ -96,7 +100,9 @@ public class LineBasedFrameDecoder extends ByteToMessageDecoder {
      *                          be created.
      */
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+        // 查找换行符位置
         final int eol = findEndOfLine(buffer);
+        //discarding默认为false，所以第一次必定走这里
         if (!discarding) {
             if (eol >= 0) {
                 final ByteBuf frame;

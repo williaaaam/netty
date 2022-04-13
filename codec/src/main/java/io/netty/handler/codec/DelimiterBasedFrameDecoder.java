@@ -24,6 +24,7 @@ import io.netty.util.internal.ObjectUtil;
 import java.util.List;
 
 /**
+ * 特殊分隔符解码器
  * A decoder that splits the received {@link ByteBuf}s by one or more
  * delimiters.  It is particularly useful for decoding the frames which ends
  * with a delimiter such as {@link Delimiters#nulDelimiter() NUL} or
@@ -62,10 +63,12 @@ public class DelimiterBasedFrameDecoder extends ByteToMessageDecoder {
 
     private final ByteBuf[] delimiters;
     private final int maxFrameLength;
+
     private final boolean stripDelimiter;
     private final boolean failFast;
     private boolean discardingTooLongFrame;
     private int tooLongFrameLength;
+    // 依赖回车换行解码器
     /** Set only when decoding with "\n" and "\r\n" as the delimiter.  */
     private final LineBasedFrameDecoder lineBasedDecoder;
 

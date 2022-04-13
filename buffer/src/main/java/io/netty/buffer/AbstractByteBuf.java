@@ -69,7 +69,7 @@ public abstract class AbstractByteBuf extends ByteBuf {
             ResourceLeakDetectorFactory.instance().newResourceLeakDetector(ByteBuf.class);
     // 指示读取的起始位置。每读取一个字节，readerIndex自动增加1。一旦readerIndex与wri-terIndex相等，则表示ByteBuf不可读了。
     int readerIndex;
-    // 指示写入的起始位置。每写一个字节，writerIndex自动增加1。一旦增加到writerIndex与capacity()容量相等，则表示ByteBuf不可写了。注意，ca-pacity()是一个成员方法，不是一个成员属性，表示ByteBuf中可以写入的容量，而且它的值不一定是最大容量值。
+    // 指示写入的起始位置。每写一个字节，writerIndex自动增加1。一旦增加到writerIndex与capacity()容量相等，则表示ByteBuf不可写了。注意，ca-acity()是一个成员方法，不是一个成员属性，表示ByteBuf中可以写入的容量，而且它的值不一定是最大容量值。
     int writerIndex;
     private int markedReaderIndex;
     private int markedWriterIndex;

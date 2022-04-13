@@ -32,6 +32,8 @@ import static io.netty.util.internal.ObjectUtil.checkPositive;
 import static java.lang.Integer.MAX_VALUE;
 
 /**
+ * ByteToMessageDecoder是虽有解码器的顶级父类；
+ * ByteToMessageDecoder的大致工作流程是将入栈的消息(ByteBuf)存放到一个缓冲区累加器(Cumulator)中，通过不断的调用子类的decode方法，读取累加器中的数据，将转换后的消息放到List中，直到缓冲区累加器的数据读完（或者其他原因），然后遍历List，依次把转换后的消息传递给下一个处理器。
  * Netty解码器就是一个入站处理器，负责处理入站数据；
  *
  * 标准解码器的职责：将输入类型为ByteBuf的数据进行解码，输出一个个的Java POJO对象；
@@ -104,8 +106,10 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     // - cumulation cannot be resized to accommodate the additional data
                     // - cumulation can be expanded with a reallocation operation to accommodate but the buffer is
                     //   assumed to be shared (e.g. refCnt() > 1) and the reallocation may not be safe.
+                    // 扩容
                     return expandCumulation(alloc, cumulation, in);
                 }
+                // 内存拷贝
                 cumulation.writeBytes(in, in.readerIndex(), required);
                 in.readerIndex(in.writerIndex());
                 return cumulation;
@@ -118,6 +122,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
     };
 
     /**
+     * 不使用内存复制
      * Cumulate {@link ByteBuf}s by add them to a {@link CompositeByteBuf} and so do no memory copy whenever possible.
      * Be aware that {@link CompositeByteBuf} use a more complex indexing implementation so depending on your use-case
      * and the decoder implementation this may be slower then just use the {@link #MERGE_CUMULATOR}.
@@ -157,12 +162,17 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
         }
     };
 
+    //初始状态
     private static final byte STATE_INIT = 0;
+    //子类解码器
     private static final byte STATE_CALLING_CHILD_DECODE = 1;
+    //解码器待删除
     private static final byte STATE_HANDLER_REMOVED_PENDING = 2;
 
     ByteBuf cumulation;
+    //默认累加器
     private Cumulator cumulator = MERGE_CUMULATOR;
+    // 每次解码一条消息
     private boolean singleDecode;
     private boolean first;
 
@@ -181,6 +191,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
      * </ul>
      */
     private byte decodeState = STATE_INIT;
+    // 当解码次数达到16次时，丢弃累积器里面已读的数据，避免OOM
     private int discardAfterReads = 16;
     private int numReads;
 
@@ -284,11 +295,14 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof ByteBuf) {
+            //存放解码后的对象
             CodecOutputList out = CodecOutputList.newInstance();
             try {
                 first = cumulation == null;
+                //将新的ByteBuf追加到cumulator中，然后释放ByteBuf
                 cumulation = cumulator.cumulate(ctx.alloc(),
                         first ? Unpooled.EMPTY_BUFFER : cumulation, (ByteBuf) msg);
+                // 循环调用子类模板方法 decode
                 callDecode(ctx, cumulation, out);
             } catch (DecoderException e) {
                 throw e;
@@ -297,18 +311,21 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
             } finally {
                 try {
                     if (cumulation != null && !cumulation.isReadable()) {
+                        // 累加器没有可读数据，计数器归零，清空累加器，显式置空等待被回收
                         numReads = 0;
                         cumulation.release();
                         cumulation = null;
                     } else if (++numReads >= discardAfterReads) {
                         // We did enough reads already try to discard some bytes so we not risk to see a OOME.
                         // See https://github.com/netty/netty/issues/4275
+                        // 解码次数达到16次，丢弃累加器里面已经被子类decode读取过的数据
                         numReads = 0;
                         discardSomeReadBytes();
                     }
 
                     int size = out.size();
                     firedChannelRead |= out.insertSinceRecycled();
+                    // 判断对象池out是不是空的，如果有数据，则调用ctx.fireChannelRead()将消息传递给下一个handler
                     fireChannelRead(ctx, out, size);
                 } finally {
                     out.recycle();
@@ -432,6 +449,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
     }
 
     /**
+     * 当累加器有可读数据，通过callDecode调用子类decode进行解码
      * Called once data should be decoded from the given {@link ByteBuf}. This method will call
      * {@link #decode(ChannelHandlerContext, ByteBuf, List)} as long as decoding should take place.
      *
@@ -443,7 +461,7 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
         try {
             while (in.isReadable()) {
                 int outSize = out.size();
-
+                // 解码后对象池有数据，传递消息到下一个handler，清空对象池
                 if (outSize > 0) {
                     fireChannelRead(ctx, out, outSize);
                     out.clear();
@@ -458,8 +476,9 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     }
                     outSize = 0;
                 }
-
+                // 记录子类decode之前的累加器中的可读数据字节数
                 int oldInputLength = in.readableBytes();
+                // 调用子类decode解码，解码后的数据放到对象池中
                 decodeRemovalReentryProtection(ctx, in, out);
 
                 // Check if this handler was removed before continuing the loop.
@@ -470,14 +489,17 @@ public abstract class ByteToMessageDecoder extends ChannelInboundHandlerAdapter 
                     break;
                 }
 
+                // 没有解码出新的数据
                 if (outSize == out.size()) {
+                    // 没有解码新出数据，也没有移动读写索引，本次解码结束
                     if (oldInputLength == in.readableBytes()) {
                         break;
                     } else {
+                        // 有读取数据，说明子类在解码，继续解码
                         continue;
                     }
                 }
-
+                // 到这里outSize>0，但是没有读取数据，说明子类decode操作不正确，抛出异常
                 if (oldInputLength == in.readableBytes()) {
                     throw new DecoderException(
                             StringUtil.simpleClassName(getClass()) +

@@ -31,15 +31,16 @@ public class NettyEchoServerHandler extends ChannelInboundHandlerAdapter {
         // 入站处理Netty从Java底层通道的数据读进ByteBuf,再传入通道流水线，随后开始入站处理
         ByteBuf in = (ByteBuf) msg;
         // TailContext 会自动释放ByteBuf占用内存
-        LOGGER.info("msg type: " + (in.hasArray() ? "堆内存" : "直接内存"));
+        //LOGGER.info("msg type: " + (in.hasArray() ? "堆内存" : "直接内存"));
         int len = in.readableBytes();
         byte[] arr = new byte[len];
         in.getBytes(0, arr);
         LOGGER.info("server received: {}", new String(arr, "UTF-8"));
-        LOGGER.info("写回前，msg.refCnt:{}", ((ByteBuf) msg).refCnt());
-        ChannelFuture f = ctx.writeAndFlush(msg);
+        //LOGGER.info("写回前，msg.refCnt:{}", ((ByteBuf) msg).refCnt());
+        // 服务端写回客户端
+        ChannelFuture f = ctx.writeAndFlush(" ack");
         f.addListener((futureListener) -> {
-            LOGGER.info("写回后，msg.refCnt:" + ((ByteBuf) msg).refCnt());
+            //LOGGER.info("写回后，msg.refCnt:" + ((ByteBuf) msg).refCnt());
         });
 
     }
